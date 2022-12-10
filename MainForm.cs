@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -248,7 +249,7 @@ namespace BSPCUI
 
             if (aasdir.ShowDialog() == DialogResult.OK)
             {
-                txtb_output.Text = aasdir.SelectedPath + '\\';
+                txtb_output.Text = aasdir.SelectedPath;
             }
         }
 
@@ -280,6 +281,39 @@ namespace BSPCUI
             }
         }
 
+        private string AppendCfgParams(string cmdLineArgs, TextBox cfg)
+        {
+            cmdLineArgs += string.Format("-cfg {0} ", cfg.Text);
+
+            if (cfg.Text.Contains("_sm"))
+            {
+                cmdLineArgs += string.Format("-ext _b0 ");
+            }
+            else if (cfg.Text.Contains("_lg"))
+            {
+                cmdLineArgs += string.Format("-ext _b1 ");
+            }
+
+            return cmdLineArgs;
+        }
+
+        private Queue<string> CollectAllBspFiles(string path)
+        {
+            Queue<string> files;
+
+            try
+            {
+                files = new Queue<string>(Directory.GetFiles(path, "*.bsp"));
+            }
+            catch (IOException ex)
+            {
+                files = new Queue<string>();
+                files.Enqueue(path);
+            }
+
+            return files;
+        }
+
         private void run_Click(object sender, EventArgs e)
         {
             string cmdLineArgs = string.Empty;
@@ -298,8 +332,6 @@ namespace BSPCUI
                 return;
             }
 
-            cmdLineArgs += string.Format("-bsp2aas {0} ", txtb_bsp2aas.Text);
-
             if (txtb_cfg1.TextLength == 0 && txtb_cfg2.TextLength == 0 || 
                 !(chkb_cfg1.Checked || chkb_cfg2.Checked))
             {
@@ -310,11 +342,13 @@ namespace BSPCUI
 
             if (txtb_output.TextLength > 0)
             {
-                cmdLineArgs += string.Format("-output {0} ", txtb_output.Text);
+                cmdLineArgs += string.Format("-output {0}\\ ", txtb_output.Text);
             }
             else
             {
-                cmdLineArgs += "-output ./ ";
+                // it seems that in bspc bug which forms the wrong file extension
+                // if you do not specify the output parameter
+                cmdLineArgs += "-output .\\ ";
             }
 
             cmdLineArgs += ParseCheckBox(chkb_breadthfirst);
@@ -330,36 +364,19 @@ namespace BSPCUI
 
             cmdLineArgs += string.Format("-threads {0} ", counter_threads.Value);
 
-            if (chkb_cfg1.Checked && txtb_cfg1.TextLength > 0)
+            foreach (string file in CollectAllBspFiles(txtb_bsp2aas.Text))
             {
-                cmdLineArgs += string.Format("-cfg {0} ", txtb_cfg1.Text);
+                cmdLineArgs += string.Format("-bsp2aas {0} ", file);
 
-                if (txtb_cfg1.Text.Contains("_sm"))
+                if (chkb_cfg1.Checked && txtb_cfg1.TextLength > 0)
                 {
-                    cmdLineArgs += string.Format("-ext _b0 ");
-                }
-                else if (txtb_cfg1.Text.Contains("_lg"))
-                {
-                    cmdLineArgs += string.Format("-ext _b1 ");
+                    Process.Start("bspc.exe", AppendCfgParams(cmdLineArgs, txtb_cfg1)).WaitForExit();
                 }
 
-                Process.Start("bspc.exe", cmdLineArgs).WaitForExit();
-            }
-
-            if (chkb_cfg2.Checked && txtb_cfg2.TextLength > 0)
-            {
-                cmdLineArgs += string.Format("-cfg {0} ", txtb_cfg2.Text);
-
-                if (txtb_cfg2.Text.Contains("_sm"))
+                if (chkb_cfg2.Checked && txtb_cfg2.TextLength > 0)
                 {
-                    cmdLineArgs += string.Format("-ext _b0 ");
+                    Process.Start("bspc.exe", AppendCfgParams(cmdLineArgs, txtb_cfg2)).WaitForExit();
                 }
-                else if (txtb_cfg2.Text.Contains("_lg"))
-                {
-                    cmdLineArgs += string.Format("-ext _b1 ");
-                }
-
-                Process.Start("bspc.exe", cmdLineArgs).WaitForExit();
             }
         }
 
