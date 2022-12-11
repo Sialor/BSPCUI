@@ -30,6 +30,7 @@ namespace BSPCUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btn_run = new System.Windows.Forms.Button();
             this.chkb_breadthfirst = new System.Windows.Forms.CheckBox();
             this.chkb_neverbose = new System.Windows.Forms.CheckBox();
@@ -324,8 +325,7 @@ namespace BSPCUI
             this.Controls.Add(this.chkb_neverbose);
             this.Controls.Add(this.chkb_breadthfirst);
             this.Controls.Add(this.btn_run);
-            this.MaximumSize = new System.Drawing.Size(563, 381);
-            this.MinimumSize = new System.Drawing.Size(563, 381);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "BSPCUI";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
